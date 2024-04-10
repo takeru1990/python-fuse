@@ -23,6 +23,8 @@ fuse.fuse_python_api = (0, 2)
 
 hello_path = '/hello'
 hello_str = b'Hello World!\n'
+bye_path = '/bye'
+bye_str = b'Goodbye!\n'
 
 class MyStat(fuse.Stat):
     def __init__(self):
@@ -48,12 +50,16 @@ class HelloFS(Fuse):
             st.st_mode = stat.S_IFREG | 0o444
             st.st_nlink = 1
             st.st_size = len(hello_str)
+        elif path == bye_path:
+            st.st_mode = stat.S_IFREG | 0o444
+            st.st_nlink = 1
+            st.st_size = len(bye_str)
         else:
             return -errno.ENOENT
         return st
 
     def readdir(self, path, offset):
-        for r in  '.', '..', hello_path[1:]:
+        for r in  '.', '..', hello_path[1:], bye_path[1:]:
             yield fuse.Direntry(r)
 
     def open(self, path, flags):
@@ -66,11 +72,12 @@ class HelloFS(Fuse):
     def read(self, path, size, offset):
         if path != hello_path:
             return -errno.ENOENT
-        slen = len(hello_str)
-        if offset < slen:
-            if offset + size > slen:
-                size = slen - offset
-            buf = hello_str[offset:offset+size]
+        if path == hello_path:
+            slen = len(hello_str)
+            if offset < slen:
+                if offset + size > slen:
+                    size = slen - offset
+                buf = hello_str[offset:offset+size]
         else:
             buf = b''
         return buf
