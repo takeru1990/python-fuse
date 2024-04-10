@@ -63,14 +63,14 @@ class HelloFS(Fuse):
             yield fuse.Direntry(r)
 
     def open(self, path, flags):
-        if path != hello_path:
+        if not (path == hello_path or path == bye_path):
             return -errno.ENOENT
         accmode = os.O_RDONLY | os.O_WRONLY | os.O_RDWR
         if (flags & accmode) != os.O_RDONLY:
             return -errno.EACCES
 
     def read(self, path, size, offset):
-        if path != hello_path:
+        if not (path == hello_path or path == bye_path):
             return -errno.ENOENT
         if path == hello_path:
             slen = len(hello_str)
@@ -78,6 +78,12 @@ class HelloFS(Fuse):
                 if offset + size > slen:
                     size = slen - offset
                 buf = hello_str[offset:offset+size]
+        elif path == bye_path:
+            slen = len(bye_str)
+            if offset < slen:
+                if offset + size > slen:
+                    size = slen - offset
+                buf = bye_str[offset:offset+size]
         else:
             buf = b''
         return buf
